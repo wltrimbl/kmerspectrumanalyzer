@@ -44,7 +44,7 @@ def plotstratifiedfracs(inlabels, inspectra):
                 plt.barh(l, (fracs[l][i] - fracs[l][i + 1]),
                          left=(fracs[l][i + 1]), color=colors[i],
                          alpha=1.0, zorder=0)
-    pos = [i + .05 for i in np.arange(len(inlabels))]
+    pos = np.arange(len(inlabels)) + 0.0
     plt.yticks(pos, cleanlabels)
     plt.xlabel("Cumulative data fraction")
     plt.tight_layout()
@@ -83,7 +83,7 @@ def plotstratifiedsizes(inlabels, inspectra):
             else:
                 plt.barh(l, (sizec[i + 1] - sizec[i]), left=(sizec[i]),
                          color=colors[i], log=True)
-    pos = np.arange(len(inlabels)) + 0.5
+    pos = np.arange(len(inlabels)) + 0.0
     plt.xlim((1, 1E9))
     plt.yticks(pos, cleanlabels)
     plt.xlabel("Distinct kmers (basepairs)")
