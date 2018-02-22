@@ -188,7 +188,15 @@ def getmgrkmerspectrum(accessionnumber, mgrkey=None):
 
 def calccumsum(a):
     '''Calcaulates the cumulative-sum vectors from a 2d numpy array
-    of [cov, num].  Note depends on upstream sort '''
+    of [cov, num].  Note depends on upstream sort
+    Returns:
+        cn  :  coverage
+        c1  :  number of distinct kmers (at a given coverage)
+        yd  :  cumulative number of distinct kmers (high cov first)
+        yo  :  cumulative number of observed kmers (high cov first)
+        zd  :  cumulative number of distinct kmers (low cov first)
+        zo  :  cumulative number of observed kmers (low cov first)
+    '''
     cn = a[:, 0]  # Coverage
     c1 = a[:, 1]  # number of distinct kmers.
     cp = cn * c1  # elementwise multiply     observed kmers by abundance
@@ -300,7 +308,7 @@ def printstratify(spectrum, bands=None, flat=False, label=""):
                                            list(frac)[1:])))
 
 
-def stratify(spectrum, bands=None):
+def stratify(spectrum, bands=None, bandtype="depth"):
     '''Breaks spectrum up into defined abundance-buckets,
     reporting cumulative data fraction and number of
     kmers=basepairs with kmer-depths greater than or equal
@@ -310,16 +318,21 @@ def stratify(spectrum, bands=None):
     '''
     if bands is None:
         bands = [1, 10, 100, 1000, 10000, 100000]
-    n = spectrum[:, 0]
-    y = spectrum[:, 1]
-    p = n * y
-    T = sum(p)
+    cn, c1, yd, yo, zd, zo = calccumsum(spectrum)
+    T = yo.max()
+    cp = cn * c1
     frac = []
     size = []
-    for b in bands:
-        frac.append(np.sum(p[n >= b]) / T)
-        size.append(np.sum(y[n >= b]))
-    return bands, frac, size
+    if bandtype=="depth":
+        for b in bands:
+            frac.append(np.sum(cp[cn >= b]) / T)
+            size.append(np.sum(c1[cn >= b]))
+        return bands, frac, size
+    elif bandtype=="complexity":
+        for b in bands:
+            frac.append(np.sum(cp[yd <= b]) / T)
+            size.append(np.sum(c1[yd <= b]))
+        return bands, frac, size
 
 
 def makegraphs(*args, **kwargs):
@@ -405,7 +418,7 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
         plot1, p, q = (plt.loglog, b_zd, b_cn)
         xlabel, ylabel = ("kmer rank (bp)", "kmer abundance")
         plt.xlim((1, 10**11))
-        if max(b_cn) < 10**8:
+        if b_cn.max() < 10**8:
             plt.ylim(1, 10**7)
         legendloc = "lower left"
     elif option == 7:

@@ -93,6 +93,50 @@ def plotstratifiedsizes(inlabels, inspectra):
     plt.show()
 
 
+def plotstratifiedcomplexity(inlabels, inspectra):
+    '''Given list of labels and spectra, produces stacked bar graphs
+    of cumulative basepairs explained stratified by bands of complexity
+    '''
+    colors = ["#FFCCCC", "#FF9999", "#FF5555", "#CC3333", "#990033", "#330000","#CC3333", "#990033", "#330000"]
+    colors = [ "#330000", "#990033", "#992233", "#CC3333", "#CC5533", "#FF5555", "#FF7755", "#FF9999", "#FFCCCC", "#FFFFCC", ]
+    colors = [ "black", "red", "orange", "yellow", "green", "blue", "violet", "gray", "white"]
+    colors = [ "#000000", "#220044", "#880000", "#CC0044", "#FF0000", "#FF4488", "#FF8888", "#FFCCFF", "#FFFFFF", "#888888", ]
+    plt.grid(linestyle="-", axis="x", zorder=-10)
+    bands = []
+    fracs = []
+    sizes = []
+    BANDS = [100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000]
+    BANDLABELS = ['100', '1k', '10k', '100k', '1M', '10M', '100M', '1G', '10G']
+    cleanlabels = [cleanlabel(l) for l in inlabels]
+    for i in range(len(inlabels)):
+        label = cleanlabels[i]
+        spectrum = inspectra[i]
+        sys.stderr.write("Stratifying " + label + "...\n")
+        band, frac, size = stratify(spectrum, bands=BANDS, bandtype="complexity")
+        bands.append(band)
+        fracs.append(frac)
+        sizes.append(size)
+    for l in range(len(inlabels)):
+        for i in range(len(bands[0]) - 1):
+            if l == 0:
+                plt.barh(l, (fracs[l][i] - fracs[l][i + 1]),
+                         left=(fracs[l][i + 1]), color=colors[i],
+                         label=str(bands[0][i]) + "-" + str(bands[0][i + 1]),
+                         alpha=1.0, zorder=0)
+            else:
+                plt.barh(l, (fracs[l][i] - fracs[l][i + 1]),
+                         left=(fracs[l][i + 1]), color=colors[i],
+                         alpha=1.0, zorder=0)
+    pos = np.arange(len(inlabels)) + 0.0
+    plt.xlim((0, 1))
+    plt.yticks(pos, cleanlabels)
+    plt.xlabel("Cumulative data fraction")
+    plt.tight_layout()
+    if not opts.suppresslegend:
+        plt.legend()
+    plt.show()
+
+
 def summarizestrata(inlabels, inspectra):
     '''Prints one-line table-style summary of cumulative fractions and
     sizes
@@ -121,7 +165,7 @@ if __name__ == '__main__':
         default=None, help="output file name")
     parser.add_argument(
         "-g", "--graph", dest="option", action="store", type=int,
-        default="0", help="graph type 0 = fraction, 1 = basepairs, -1 = table")
+        default="0", help="graph type 0 = fraction, 1 = basepairs, 2 = fraction by basepairs, -1 = table")
     parser.add_argument(
         "-i", "--interactive", dest="interactive", action="store_true",
         default=False, help="interactive mode--draw window")
@@ -187,6 +231,8 @@ if __name__ == '__main__':
         plotstratifiedfracs(labels, spectra)
     elif opts.option == 1:
         plotstratifiedsizes(labels, spectra)
+    elif opts.option == 2:
+        plotstratifiedcomplexity(labels, spectra)
     elif opts.option == -1:
         summarizestrata(labels, spectra)
         sys.exit()
