@@ -4,7 +4,6 @@
 import sys
 import os
 import scipy.stats
-from optparse import OptionParser
 import numpy as np
 import ksatools
 

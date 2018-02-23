@@ -163,7 +163,7 @@ def plotfit():
              ("genomesize", GENOMESIZE / 1E6))
     plt.text(BOT * 10, 6E5, "%s = %.1f x" % ("coverage      ", COVERAGE))
     plt.savefig("%s.fit.png" % os.path.basename(OUTFILE))
-    if(OPTS.interactive):
+    if OPTS.interactive:
         plt.show()
 
 

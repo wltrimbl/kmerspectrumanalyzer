@@ -40,7 +40,7 @@ if __name__ == '__main__':
         out_fh = open(opts.outp, "w")
 
     sys.stderr.write("Processing %s ... " % (opts.inp,))
-    pattern = re.compile("med21mer=(\d*)")
+    pattern = re.compile(r"med21mer=(\d*)")
     records = SeqIO.parse(in_fh, "fastq")
     for seq_record1 in records:
         seq_record2 = records.next()

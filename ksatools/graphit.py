@@ -56,7 +56,7 @@ def plotme(data, graphtype=None, label=None, n=0, opts=None, color=None, style="
         pA = plt.plot(data[1:, 0], np.exp(np.diff(np.log(data[:, 1]))) /
                       data[1:, 0], ".", color=color, label=label, linestyle=style)
         pA = plt.plot(data[1:, 0], np.exp(np.diff(
-            np.log(data[:, 1]))) / data[1:, 0], color=color, label=Nonte, linestyle=style)
+            np.log(data[:, 1]))) / data[1:, 0], color=color, label=None, linestyle=style)
         legendloc = "upper right"
     if not opts.suppress:
         plt.legend()

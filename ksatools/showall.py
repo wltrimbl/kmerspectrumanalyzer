@@ -34,7 +34,6 @@ def decimate(a, d):
     print("decimate return:", np.array(b).shape)
     return np.array(b)
 
-
 def decimate_withcovest(a, covest):
     '''attempt to discretize the 2d spectrum when the central abundance is known'''
     simple = np.zeros([10, 10])
@@ -64,41 +63,42 @@ def decimate_withcovest(a, covest):
 if __name__ == '__main__':
     usage = "usage: %prog <input 2d matrix > -o <output file>"
     parser = argparse.ArgumentParser(usage)
-    parser.add_argument("infile", type=argparse.FileType, help="input 2d matrix") 
+    parser.add_argument("infile", type=argparse.FileType,
+                        help="input 2d matrix file")
     parser.add_argument("-o", "--output", dest="outfile", default=None,
                       help="Output file.")
     parser.add_argument("-i", "--interactive", dest="interact", default=False,
-                      action="store_true", help="Interactive")
+                        action="store_true", help="Interactive")
     parser.add_argument("-g", "--graphtype", dest="graphtype", default="1000",
-                      help="graph type : 1000, 100, raw")
+                        help="graph type : 1000, 100, raw")
     parser.add_argument("-m", "--m", dest="m", default=1,
-                      help="axis 1 decimator")
+                        help="axis 1 decimator")
     parser.add_argument("-n", "--n", dest="n", default=1,
-                      help="axis 2 decimator")
+                        help="axis 2 decimator")
     parser.add_argument("-x", "--xlabel", dest="xlabel",
-                      default=None, help="xaxis label")
+                        default=None, help="xaxis label")
     parser.add_argument("-y", "--ylabel", dest="ylabel",
-                      default=None, help="yaxis label")
+                        default=None, help="yaxis label")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
-                      default=True, help="Verbose [default off]")
+                        default=True, help="Verbose [default off]")
 
     args = parser.parse_args()
     infile = args.infile
     if not (infile and os.path.isfile(infile)):
         parser.error("Missing input file")
-    if opts.xlabel != None:
-        xlabel = opts.xlabel
+    if args.xlabel != None:
+        xlabel = args.xlabel
     else:
         assert 0   # X label -x is mandatory
-    if opts.ylabel != None:
-        ylabel = opts.ylabel
+    if args.ylabel != None:
+        ylabel = args.ylabel
     else:
         assert 0   # Y label -y is mandatory
-    outfile = opts.outfile
-    if opts.outfile == None:
+    outfile = args.outfile
+    if args.outfile == None:
         outfile = infile
 
-    if opts.verbose:
+    if args.verbose:
         sys.stdout.write("Trying to read %s with numpy...\n" % infile)
     data = np.loadtxt(infile)
     print("data shape ", data.shape)
@@ -106,8 +106,8 @@ if __name__ == '__main__':
     yax = data[:, 0]
     d = data[1:, 1:]
     print("d shape", d.shape)
-    m = int(opts.m)
-    n = int(opts.n)
+    m = int(args.m)
+    n = int(args.n)
     if m == 0:
         m = max(1, int(d.shape[0] / 100))
     if n == 0:
@@ -121,11 +121,11 @@ if __name__ == '__main__':
     plt.title(infile, fontsize=18)
     plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(ylabel, fontsize=16)
-    if opts.m != "0":
+    if args.m != "0":
         plt.xlim([0, 1000])
-    if opts.n != "0":
+    if args.n != "0":
         plt.ylim([0, 1000])
-    if opts.interact:
+    if args.interact:
         plt.show()
     plt.savefig(outfile + ".al1.png")
 

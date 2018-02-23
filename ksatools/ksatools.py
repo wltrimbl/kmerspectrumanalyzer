@@ -323,12 +323,12 @@ def stratify(spectrum, bands=None, bandtype="depth"):
     cp = cn * c1
     frac = []
     size = []
-    if bandtype=="depth":
+    if bandtype == "depth":
         for b in bands:
             frac.append(np.sum(cp[cn >= b]) / T)
             size.append(np.sum(c1[cn >= b]))
         return bands, frac, size
-    elif bandtype=="complexity":
+    elif bandtype == "complexity":
         for b in bands:
             frac.append(np.sum(cp[yd <= b]) / T)
             size.append(np.sum(c1[yd <= b]))

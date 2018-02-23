@@ -7,7 +7,6 @@ import argparse
 
 import matplotlib as mpl
 import numpy as np
-import scipy.stats
 
 from ksatools.rare import fract, rich, calc_resampled_fraction, calc_resampled_richness, plotme
 from ksatools.ksatools import loadfile
