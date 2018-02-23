@@ -65,11 +65,14 @@ def plotstratifiedsizes(inlabels, inspectra):
     sizes = []
     BANDS = [1, 3, 30, 300, 3000, 30000, 30000000]
     cleanlabels = [cleanlabel(l) for l in inlabels] 
+    maxsize = 0
     for i in range(len(inlabels)):
         label = cleanlabels[i]
         spectrum = inspectra[i]
         sys.stderr.write("Stratifying " + label + "...\n")
         band, frac, size = stratify(spectrum, bands=BANDS)
+        if np.max(size) > maxsize:
+            maxsize = np.max(size)
         bands.append(band)
         fracs.append(frac)
         sizes.append(size)
@@ -84,7 +87,8 @@ def plotstratifiedsizes(inlabels, inspectra):
                 plt.barh(l, (sizec[i + 1] - sizec[i]), left=(sizec[i]),
                          color=colors[i], log=True)
     pos = np.arange(len(inlabels)) + 0.0
-    plt.xlim((1, 1E9))
+    xlimit = max(1E9,  10**int(np.log10(maxsize) + 1))
+    plt.xlim((1, xlimit))  # lower xlimit should be an even power of 10
     plt.yticks(pos, cleanlabels)
     plt.xlabel("Distinct kmers (basepairs)")
     plt.tight_layout()
