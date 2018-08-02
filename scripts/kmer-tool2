@@ -65,6 +65,7 @@ def split_fasta(in_fh, file_base, max_size):
         head = line[0] == ">"
         if head and ((curr_size + curr_buff) >= max_size):
             fhdl_set[curr_file].write(strbuffer)
+            fhdl_set[curr_file].close()
             curr_size = 0
             curr_buff = 0
             curr_file += 1
@@ -80,8 +81,7 @@ def split_fasta(in_fh, file_base, max_size):
         curr_buff += len(line)
     if strbuffer != '':
         fhdl_set[curr_file].write(strbuffer)
-    for fh in fhdl_set:
-        fh.close()
+    fhdl_set[curr_file].close()
     return fhdl_name
 
 
@@ -105,6 +105,7 @@ def split_fastq(in_fh, file_base, max_size):
                 firstline = 0
             if (curr_size + curr_buff) >= max_size:
                 fhdl_set[curr_file].write(strbuffer)
+                fhdl_set[curr_file].close()
                 curr_size = 0
                 curr_buff = 0
                 curr_file += 1
@@ -116,13 +117,15 @@ def split_fastq(in_fh, file_base, max_size):
                 curr_size += curr_buff
                 curr_buff = 0
                 strbuffer = ''
-            rec_str = ''.join(lines)
+            if lines is not None:
+                rec_str = ''.join(lines)
+            else:
+                rec_str = ""
             strbuffer += rec_str
             curr_buff += len(rec_str)
     if strbuffer != '':
         fhdl_set[curr_file].write(strbuffer)
-    for fh in fhdl_set:
-        fh.close()
+    fhdl_set[curr_file].close()
     return fhdl_name
 
 
@@ -134,6 +137,7 @@ def split_seq_file(seq_fh, max_size, seq_type, tmpdir):
         file_set = split_fasta(seq_fh, file_base, max_size)
     elif seq_type == 'fastq':
         file_set = split_fastq(seq_fh, file_base, max_size)
+    assert file_set is not None
     return file_set
 
 
@@ -201,8 +205,9 @@ def main(args):
                         type=int, help="Number of processors to use [default 4].")
     parser.add_argument("-l", "--length", dest="length",
                         default=None, type=int, help="Length of kmer to use.")
-    parser.add_argument("-s", "--size", dest="size", default="1000000000",
-                        help="Size of hash to use, number of unique kmers [default '1G']")
+    parser.add_argument("-s", "--size", dest="size", default="4000000000",
+                        help="Size of hash to use, number of unique kmers [default '4G']")
+     # Large datasets cause automatic doubling of the size of the hash, and then merge_hash_set fails
     parser.add_argument("-c", "--count", dest="count", default=12,
                         type=int, help="Count size in bits [default '12']")
     parser.add_argument("-f", "--format", dest="format", default='histo',
