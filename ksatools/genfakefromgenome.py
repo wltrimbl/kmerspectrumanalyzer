@@ -2,9 +2,9 @@
 
 import sys
 import os
+from argparse import ArgumentParser
 from scipy import stats
 import numpy as np
-from optparse import OptionParser
 
 
 def count(x):
@@ -30,21 +30,22 @@ def nbinomrvs(poissonlambda, alpha, size=1):
 
 if __name__ == '__main__':
     usage = "usage: %prog -i <input sequence file> <coverage>"
-    parser = OptionParser(usage)
-    parser.add_option("-i", "--input", dest="infile",
+    parser = ArgumentParser(description=usage)
+    parser.add_argument("-i", "--input", dest="infile",
                       default=None, help="Input genome spectrum.")
-    parser.add_option("-s", "--shape", dest="shape",
+    parser.add_argument("-s", "--shape", dest="shape",
                       default=.04, help="Shape parameter.")
+    parser.add_argument("coverage", type=float, help="coverage")
 
-    (opts, args) = parser.parse_args()
-    coverage = float(args[0])
-    filename = opts.infile
+    args = parser.parse_args()
+    coverage = args.coverage
+    filename = args.infile
     if not (filename and os.path.isfile(filename)):
         parser.error("Missing input file")
     sys.stderr.write("Generating fake data from %s\n" % filename)
-    shap = float(opts.shape)
+    shap = float(args.shape)
     m = []
-    for l in open(opts.infile):
+    for l in open(args.infile):
         l = l.rstrip()
         h = l.split("\t")
         try:

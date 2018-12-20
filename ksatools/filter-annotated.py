@@ -3,7 +3,7 @@
 import sys
 import os
 import re
-from optparse import OptionParser
+from argparse import ArgumentParser
 from Bio import SeqIO
 
 
@@ -23,23 +23,23 @@ def gccontent(sq):
 
 if __name__ == '__main__':
     usage = "usage: %prog -i <file1> -o <rejectfile> \n filters interleaved fastq on regex in header, outputs to std out"
-    parser = OptionParser(usage)
-    parser.add_option("-i", "--in", dest="inp",
+    parser = ArgumentParser(description=usage)
+    parser.add_argument("-i", "--in", dest="inp",
                       default=None, help="input file")
-    parser.add_option("-o", "--out", dest="outp",
+    parser.add_argument("-o", "--out", dest="outp",
                       default=None, help="reject fastq file")
-    parser.add_option("-v", "--verbose", dest="verbose",
+    parser.add_argument("-v", "--verbose", dest="verbose",
                       action="store_true", default=True, help="Verbose [default off]")
 
-    (opts, args) = parser.parse_args()
-    if not (opts.inp and os.path.isfile(opts.inp)):
+    args = parser.parse_args()
+    if not (args.inp and os.path.isfile(args.inp)):
         parser.error("Missing input file")
 
-    in_fh = open(opts.inp)
-    if(opts.outp):
-        out_fh = open(opts.outp, "w")
+    in_fh = open(args.inp)
+    if(args.outp):
+        out_fh = open(args.outp, "w")
 
-    sys.stderr.write("Processing %s ... " % (opts.inp,))
+    sys.stderr.write("Processing %s ... " % (args.inp,))
     pattern = re.compile(r"med21mer=(\d*)")
     records = SeqIO.parse(in_fh, "fastq")
     for seq_record1 in records:
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             if m1 > 75 and m2 > 75:
                 SeqIO.write([seq_record1, seq_record2], sys.stdout, "fastq")
             else:
-                if opts.outp:
+                if args.outp:
                     SeqIO.write([seq_record1, seq_record2], out_fh, "fastq")
-    if opts.verbose:
+    if args.verbose:
         sys.stderr.write("Done. \n")

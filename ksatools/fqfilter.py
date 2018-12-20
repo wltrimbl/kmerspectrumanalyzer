@@ -2,10 +2,12 @@
 
 import sys
 import os
-from optparse import OptionParser
+from argparse import ArgumentParser
 from Bio import SeqIO
-from string import maketrans
-
+try:
+    from string import maketrans
+except ImportError:
+    maketrans = str.maketrans
 
 def lesserkmer(s):
     '''returns the lesser of a kmer and its reverse complement'''
@@ -84,48 +86,48 @@ def kmerabundance(seq, index):
 
 if __name__ == '__main__':
     usage = "usage: %prog -1 <file1> [-2 <file2>] -i <index>  [-o <outstem>] -l <cutoff>\n  Note: generates outstem.hi.fastq and outstem.lo.fastq"
-    parser = OptionParser(usage)
-    parser.add_option("-1", "--one", dest="one",
-                      default=None, help="Input file 1")
-    parser.add_option("-2", "--two", dest="two",
+    parser = ArgumentParser(usage)
+    parser.add_argument("-1", "--one", dest="one",
+                      required=True, help="Input file 1")
+    parser.add_argument("-2", "--two", dest="two",
                       default=None, help="Input file 2 (interleaved if absent)")
-    parser.add_option("-i", "--index", dest="index",
-                      default=None, help="input index ")
-    parser.add_option("-t", "--type", dest="typ",
+    parser.add_argument("-i", "--index", dest="index",
+                      required=True, help="input index ")
+    parser.add_argument("-t", "--type", dest="typ",
                       default="fastq", help="input datatype (fastq, fasta)")
-    parser.add_option("-v", "--verbose", dest="verbose", action="store_true",
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                       default=True, help="Verbose [default off]")
-    parser.add_option("-l", "--cutoff", dest="cutoff",
+    parser.add_argument("-l", "--cutoff", dest="cutoff",
                       default=None, help="median min coverage cutoff")
-    parser.add_option("-o", "--outstem", dest="outstem",
+    parser.add_argument("-o", "--outstem", dest="outstem",
                       default=None, help="output file stem")
-    (opts, args) = parser.parse_args()
-    typ = opts.typ
-    if not opts.typ and opts.one[-1] == "a" or opts.one[-1] == "A":
+    args = parser.parse_args()
+    typ = args.typ
+    if not args.typ and args.one[-1] == "a" or args.one[-1] == "A":
         typ = "fasta"
-    if not opts.one:
+    if not args.one:
         parser.error("Missing input filename")
-    if not os.path.isfile(opts.one):
-        parser.error("Missing input file %s" % opts.one)
-    if opts.two and os.path.isfile(opts.two):
-        in_two = open(opts.two)
-    if not opts.cutoff:
+    if not os.path.isfile(args.one):
+        parser.error("Missing input file %s" % args.one)
+    if args.two and os.path.isfile(args.two):
+        in_two = open(args.two)
+    if not args.cutoff:
         sys.stderr.write("Warning: missing cutoff paramter -l\n")
-        opts.cutoff = 0
-    if opts.outstem == None:
-        opts.outstem = opts.one
-    in_one = open(opts.one)
-    in_idx = open(opts.index)
-    if opts.verbose or 1:
+        args.cutoff = 0
+    if args.outstem == None:
+        args.outstem = args.one
+    in_one = open(args.one)
+    in_idx = open(args.index)
+    if args.verbose or 1:
         sys.stderr.write(
-            "Processing sequences %s and table %s  ...\n" % (opts.one, opts.index))
+            "Processing sequences %s and table %s  ...\n" % (args.one, args.index))
     sys.stderr.write("Opening output files %s.hi.%s and %s.hi.%s\n" %
-                     (opts.outstem, typ, opts.outstem, typ))
-    out_high = open("%s.hi.%s" % (opts.outstem, typ), "w")
-    out_low1 = open("%s.lo.%s" % (opts.outstem, typ), "w")
+                     (args.outstem, typ, args.outstem, typ))
+    out_high = open("%s.hi.%s" % (args.outstem, typ), "w")
+    out_low1 = open("%s.lo.%s" % (args.outstem, typ), "w")
     giant = {}
     sys.stderr.write("Reading index...\n")
-    indexlist = opts.index.split(",")
+    indexlist = args.index.split(",")
     indexes = []
     for i in range(len(indexlist)):
         giant = read_index(indexlist[i])
@@ -135,7 +137,7 @@ if __name__ == '__main__':
 #   Setup paired-read input
     sys.stderr.write("Looping data: \n")
     records1 = SeqIO.parse(in_one, typ)
-    if opts.two:
+    if args.two:
         records2 = SeqIO.parse(in_two, typ)
     else:
         records2 = records1
@@ -154,12 +156,12 @@ if __name__ == '__main__':
                 seq_record1.description, k, med1, k, max1, k, min1)
             seq_record2.description = "%s\tmed%dmer=%d\tmax%dmer=%d\tmin%dmer=%d" % (
                 seq_record2.description, k, med2, k, max2, k, min2)
-            if med1 > float(opts.cutoff) and med2 > float(opts.cutoff):
+            if med1 > float(args.cutoff) and med2 > float(args.cutoff):
                 SeqIO.write([seq_record1, seq_record2], out_high, typ)
             else:
                 SeqIO.write([seq_record1, seq_record2], out_low1, typ)
 
     out_low1.close()
     out_high.close()
-    if opts.verbose:
+    if args.verbose:
         sys.stderr.write("Done. \n")

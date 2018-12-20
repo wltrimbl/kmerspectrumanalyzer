@@ -63,7 +63,7 @@ def decimate_withcovest(a, covest):
 if __name__ == '__main__':
     usage = "usage: %prog <input 2d matrix > -o <output file>"
     parser = argparse.ArgumentParser(usage)
-    parser.add_argument("infile", type=argparse.FileType,
+    parser.add_argument("infile", type=str, # argparse.FileType,
                         help="input 2d matrix file")
     parser.add_argument("-o", "--output", dest="outfile", default=None,
                       help="Output file.")
@@ -84,8 +84,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     infile = args.infile
-    if not (infile and os.path.isfile(infile)):
-        parser.error("Missing input file")
     if args.xlabel != None:
         xlabel = args.xlabel
     else:
@@ -96,10 +94,8 @@ if __name__ == '__main__':
         assert 0   # Y label -y is mandatory
     outfile = args.outfile
     if args.outfile == None:
-        outfile = infile
+        outfile = sys.stdout
 
-    if args.verbose:
-        sys.stdout.write("Trying to read %s with numpy...\n" % infile)
     data = np.loadtxt(infile)
     print("data shape ", data.shape)
     xax = data[0, :]
@@ -127,7 +123,7 @@ if __name__ == '__main__':
         plt.ylim([0, 1000])
     if args.interact:
         plt.show()
-    plt.savefig(outfile + ".al1.png")
+    plt.savefig(outfile.name + ".al1.png")
 
     if 0:
         sim = decimate_withcovest(d, (84.5, 80.3))
