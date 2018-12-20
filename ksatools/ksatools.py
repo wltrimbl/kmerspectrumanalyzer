@@ -278,12 +278,17 @@ def loadfile(filename):
             try:
                 matrix = np.loadtxt(filename, comments="#")
             except ValueError:
-                matrix = np.loadtxt(filename, skiprows=1,
+                try:
+                     matrix = np.loadtxt(filename, skiprows=1,
                                     delimiter=",", usecols=(0, 1))
+                except IndexError:
+                     matrix = np.loadtxt(filename, skiprows=1,
+                                    usecols=(0, 1))
         # return None if the file is empty
         matrix[np.isinf(matrix)] = 0
         matrix = np.atleast_2d(matrix)
         if matrix.shape[1] == 0:
+            sys.stderr.write("Warning!  Empty data structure!")
             return []
         else:
             return matrix
@@ -347,7 +352,7 @@ def makegraphs(*args, **kwargs):
 
 
 def makegraph(spectrum, filename, option=6, label=None, n=0,
-              dump=False, opts=None, colorlist=COLORLIST,
+              dump=False, opts={}, colorlist=COLORLIST,
               stylelist=None, name=None, suppress=False,
               xlabel=None, ylabel=None):
     '''Draw graphs, one at a time, and add them to the current plot.
@@ -535,14 +540,16 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
         fracboundaries = 1 - np.array(frac)
         sizeboundaries = size
         drawboxes(fracboundaries, 0)
-    if hasattr(opts, "xlabel") and opts.xlabel is not None:
-        xlabel = opts.xlabel
-    if hasattr(opts, "ylabel") and opts.ylabel is not None:
-        ylabel = opts.ylabel
-    if hasattr(opts, "suppress"):
-        suppress = opts.suppress
+
+    if "xlabel" in opts.keys() and opts["xlabel"] is not None: 
+        xlabel = opts["xlabel"] 
+    if "ylabel" in opts.keys() and opts["ylabel"] is not None:
+        ylabel = opts["ylabel"]
+    if "suppress" in opts.keys():
+        suppress = opts["suppress"]
     else:
-        suppress = False
+        suppress = suppress
+
     # Draw graphs if option >= 0
     if stylelist is not None and stylelist != []:
         style = stylelist[n]
@@ -552,8 +559,8 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
             plt.legend(loc=legendloc)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        if (hasattr(opts, "name") and opts.name is not None) and n == 0:
-            plt.title(opts.name)
+        if "name" in opts.keys() and opts["name"] is not None and n == 0:
+            plt.title(opts["name"])
         plt.grid(1)
 
 

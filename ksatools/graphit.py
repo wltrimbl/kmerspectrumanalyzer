@@ -6,11 +6,10 @@ COLORLIST = ["b", "g", "r", "c", "y",
              "DarkGrey", "DeepPink", "LightPink"]
 
 import sys
-import numpy as np
-import ksatools
-import matplotlib as mpl
 import argparse
-
+import numpy as np
+import matplotlib as mpl
+import ksatools
 
 def getcolor(index, colorlist):
     if colorlist == []:
@@ -19,38 +18,42 @@ def getcolor(index, colorlist):
     return colorlist[l]
 
 
-def plotme(data, graphtype=None, label=None, n=0, opts=None, color=None, style="-", scale=1):
+def plotme(data, graphtype=None, label=None, n=0, opts={}, color=None, style="-", scale=1):
     import matplotlib.pyplot as plt
     # note, calccumsum will raise an exception here if data is invalid
     if color == None:
         color = getcolor(n, colorlist)
     if label == "":
         label = None
+    if "thickness" in opts.keys():
+        thickness = opts["thickness"]
+    else:
+        thickness = 1
     if graphtype == "linear" or graphtype == None:
-        #        if opts.markers:
+        #        if "markers" in opts.keys()
         #            pA = plt.plot(data[:, 0], data[:, 1], ".", color=color, label=label, linestyle=style)
-        pA = plt.plot(s * data[:, 0], data[:, 1],
-                      color=color, label=label, linestyle=style)
+#        pA = plt.plot(s * data[:, 0], data[:, 1], color=color, label=label, linestyle=style)
+        pA = plt.plot(s* data[:, 0], data[:, 1])
         legendloc = "upper right"
     if graphtype == "semilogy":
-        if opts.dot:
+        if "dot" in opts.keys():
             pA = plt.semilogy(
                 s * data[:, 0], data[:, 1], ".", color=color, label=label, linestyle=style)
         pA = plt.semilogy(s * data[:, 0], data[:, 1], color=color,
-                          label=None, linestyle=style, linewidth=opts.thickness)
+                          label=None, linestyle=style, linewidth=thickness)
         legendloc = "upper right"
     if graphtype == "semilogx":
-        if opts.dot:
+        if "dot" in opts.keys():
             pA = plt.semilogx(data[:, 0], data[:, 1], ".",
                               color=color, label=label, linestyle=style)
         pA = plt.semilogx(s * data[:, 0], data[:, 1], color=color,
-                          label=label, linestyle=style, linewidth=opts.thickness)
+                          label=label, linestyle=style, linewidth=thickness)
         legendloc = "upper right"
     if graphtype == "loglog":
         pA = plt.loglog(s * data[:, 0], data[:, 1], ".",
                         color=color, label=label, linestyle=style)
         pA = plt.loglog(s * data[:, 0], data[:, 1], color=color,
-                        label=None, linestyle=style, linewidth=opts.thickness)
+                        label=None, linestyle=style, linewidth=thickness)
         legendloc = "upper right"
     if graphtype == "diff":
         pA = plt.plot(data[1:, 0], np.exp(np.diff(np.log(data[:, 1]))) /
@@ -58,22 +61,22 @@ def plotme(data, graphtype=None, label=None, n=0, opts=None, color=None, style="
         pA = plt.plot(data[1:, 0], np.exp(np.diff(
             np.log(data[:, 1]))) / data[1:, 0], color=color, label=None, linestyle=style)
         legendloc = "upper right"
-    if not opts.suppress:
+    if not "suppress" in opts.keys() and opts["suppress"] is True:
         plt.legend()
-    if opts.plotlegend is not None:
-        plt.gcf().suptitle(opts.plotlegend, fontsize=24, x=0.03)
-    if opts.xlim != "":
-        x1, x2 = opts.xlim.split(",")
+    if "plotlegend" in opts.keys():
+        plt.gcf().suptitle(opts["plotlegend"], fontsize=24, x=0.03)
+    if "," in opts["xlim"]:
+        x1, x2 = opts["xlim"].split(",")
         plt.xlim([float(x1), float(x2)])
-    plt.xlabel(opts.xlabel, fontsize=18)
-    plt.ylabel(opts.ylabel, fontsize=18)
+    plt.xlabel(opts["xlabel"], fontsize=18)
+    plt.ylabel(opts["ylabel"], fontsize=18)
     plt.grid(1)
 
 
 if __name__ == '__main__':
     usage = "graphit.py <options> <arguments>"
     parser = argparse.ArgumentParser(usage)
-    parser.add_argument("files", nargs='*', type="str")
+    parser.add_argument("files", nargs='*', type=str)
     parser.add_argument("-x", "--xlabel", dest="xlabel", action="store",
                       default="x label", help="")
     parser.add_argument("-y", "--ylabel", dest="ylabel", action="store",
@@ -86,8 +89,8 @@ if __name__ == '__main__':
                       default=None, help="graph type")
     parser.add_argument("-i", "--interactive", dest="interactive", action="store_true",
                       default=False, help="interactive mode--draw window")
-    parser.add_argument("-l", "--list", dest="filelist",
-                      default=None, help="file containing list of targets and labels")
+    parser.add_argument("-l", "--list", dest="filelist", required=True,
+                      help="file containing list of targets and labels")
     parser.add_argument("-t", "--thickness", dest="thickness",
                       default=2, help="line thickness for traces")
     parser.add_argument("-w", "--writetype", dest="writetype",
@@ -101,20 +104,20 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--scale", dest="scale",
                       default=False, action="store_true", help="Multiply by col 2")
     parser.add_argument("--xlim", dest="xlim",
-                      default="", type="str", help="xlimits: comma-separated")
+                      default="", type=str, help="xlimits: comma-separated")
     parser.add_argument("--ylim", dest="ylim",
-                      default="", type="str", help="ylimits: comma-separated")
+                      default="", type=str, help="ylimits: comma-separated")
     parser.add_argument("-d", "--dot", dest="dot",
                       default=False, action="store_true", help="plot dots")
 
-    OPTS = parser.parse_args()
-    SCALE = OPTS.scale
-    if not OPTS.interactive:
+    ARGS = parser.parse_args()
+    SCALE = ARGS.scale
+    if not ARGS.interactive:
         mpl.use("Agg")
     else:
         mpl.use('TkAgg')
     import matplotlib.pyplot as plt
-    listfile = OPTS.filelist
+    listfile = ARGS.filelist
 
     IN_FILE = open(listfile, "r").readlines()
 
@@ -141,27 +144,27 @@ if __name__ == '__main__':
                     selectedcolor = a[2]
                     selectedstyle = a[3]
                     plotme(spectrum, label=a[1], color=selectedcolor, scale=s,
-                           style=selectedstyle, graphtype=OPTS.graphtype, opts=OPTS)
+                           style=selectedstyle, graphtype=ARGS.graphtype, opts=vars(ARGS))
                 else:
                     plotme(spectrum, label=a[1], color=selectedcolor, scale=s,
-                           graphtype=OPTS.graphtype, opts=OPTS)
+                           graphtype=ARGS.graphtype, opts=vars(ARGS))
 
                     n = n + 1
-    if OPTS.suppress == 0:
+    if ARGS.suppress == 0:
         plt.legend(loc="upper left")
     else:
-        for v in OPTS.files:
+        for v in ARGS.files:
             print(v)
             filename = v
             spectrum = ksatools.loadfile(filename)
-            plotme(spectrum, filename, opts=OPTS,
-                   color=COLORLIST[n], graphtype=OPTS.graphtype)
+            plotme(spectrum, filename, opts=vars(ARGS),
+                   color=COLORLIST[n], graphtype=ARGS.graphtype)
             n = n + 1
 #        plt.legend(loc="upper left")
-    if OPTS.interactive:
+    if ARGS.interactive:
         plt.show()
-    if OPTS.outfile == "test.png":
+    if ARGS.outfile == "test.png":
         sys.stderr.write("Warning! printing graphs in test.png!\n")
     else:
-        sys.stderr.write("Printing graphs in " + OPTS.outfile + "\n")
-        plt.savefig(OPTS.outfile)
+        sys.stderr.write("Printing graphs in " + ARGS.outfile + "\n")
+        plt.savefig(ARGS.outfile)

@@ -16,10 +16,10 @@ def main(filename, opt=6, label=None, n=0, opts=None, colorlist=[],
     Appends graphics from each file onto the figure.
     opt is a symbol for the graph type;
     n is the serial number of successful traces.'''
-    logfh = open(opts.logfile, "a")
-    if opts.filetype.upper() == "MGM":
+    logfh = open(opts["logfile"], "a")
+    if opts["filetype"].upper() == "MGM":
         spectrum = getmgrkmerspectrum(filename, mgrkey=MGRKEY)
-    elif opts.filetype == "file":
+    elif opts["filetype"] == "file":
         spectrum = loadfile(filename)
     else:
         raise ValueError(
@@ -35,7 +35,7 @@ def main(filename, opt=6, label=None, n=0, opts=None, colorlist=[],
         try:
             makegraphs(
                 spectrum, filename, option=opt, label=label, n=n,
-                dump=opts.dump, opts=opts, colorlist=colorlist,
+                dump=opts["dump"], opts=opts, colorlist=colorlist,
                 stylelist=stylelist)
 #            sys.stderr.write("Printing stats in logfile %s %d\n" %
 #                (opts.logfile, n))
@@ -109,31 +109,31 @@ if __name__ == '__main__':
         "-y", "--ylabel", dest="ylabel",
         default=None, help="Y label override")
 
-    opts = parser.parse_args()
-    graphtype = opts.option
-    writetype = opts.writetype
-    if len(opts.files) == 0 and not opts.filelist:
+    ARGS = parser.parse_args()
+    graphtype = ARGS.option
+    writetype = ARGS.writetype
+    if len(ARGS.files) == 0 and not ARGS.filelist:
         sys.exit("Missing input file argument!\n" + usage)
     assert writetype == "png" or writetype == "pdf" or writetype == "eps"
 
-    if opts.outfile:
-        imagefilename = "%s.%d.%s" % (opts.outfile, graphtype, writetype)
-    elif opts.filelist:
-        imagefilename = "%s.%d.%s" % (opts.filelist, graphtype, writetype)
+    if ARGS.outfile:
+        imagefilename = "%s.%d.%s" % (ARGS.outfile, graphtype, writetype)
+    elif ARGS.filelist:
+        imagefilename = "%s.%d.%s" % (ARGS.filelist, graphtype, writetype)
     else:
-        imagefilename = "%s.%d.%s" % (opts.files[0], graphtype, writetype)
+        imagefilename = "%s.%d.%s" % (ARGS.files[0], graphtype, writetype)
         sys.stderr.write("Warning, using default filename %s\n" %
                          (imagefilename,))
     # only invoke interactive backend if requested with -i
     # this stabilizes behavior on non-interactive terminals
-    if not opts.interactive:
+    if not ARGS.interactive:
         mpl.use("Agg")
     else:
         mpl.use('TkAgg')
     import matplotlib.pyplot as plt
     fig = plt.figure()
     fig.patch.set_facecolor('white')
-    if opts.filetype == "mgm":
+    if ARGS.filetype == "mgm":
         try:
             MGRKEY = os.environ["MGRKEY"]
         except KeyError:
@@ -144,10 +144,10 @@ if __name__ == '__main__':
     # fails to produce some traces
     colorlist = []
     stylelist = []
-    if opts.filelist is not None:
+    if ARGS.filelist is not None:
         assert os.path.isfile(
-            opts.filelist), "File %s does not exist" % opts.filelist
-        IN_FILE = open(opts.filelist, "r")
+            ARSG.filelist), "File %s does not exist" % ARGS.filelist
+        IN_FILE = open(ARGS.filelist, "r")
         for line in IN_FILE:
             if line[0] != "#":
                 a = line.strip().split("\t")
@@ -161,17 +161,17 @@ if __name__ == '__main__':
                     sys.stderr.write("%s\t%s\n" % (a[0], a[1]))
                     graphcount = main(
                         a[0], graphtype, label=a[1], n=graphcount,
-                        opts=opts, colorlist=colorlist, stylelist=stylelist)
+                        opts=vars(ARGS), colorlist=colorlist, stylelist=stylelist)
     else:
-        for f in opts.files:
+        for f in ARGS.files:
             filen = f
-            graphcount = main(filen, graphtype, n=graphcount, opts=opts)
+            graphcount = main(filen, graphtype, n=graphcount, opts=vars(ARGS))
     # don't continue if all inputs fail
     assert graphcount > 0, "ERROR: unable to find any data to graph!"
     if graphtype >= 0:
         sys.stderr.write("Writing graph into file %s\n" % (imagefilename))
         plt.savefig(imagefilename)
-    if opts.interactive:
+    if ARGS.interactive:
         plt.show()
     else:
         sys.stderr.write("Use -i to open widow with graph\n")
