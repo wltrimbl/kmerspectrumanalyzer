@@ -1,7 +1,11 @@
 #!/usr/bin/env python
-from __future__ import division
-
 '''Tool to generate graphs of kmer spectra'''
+
+from __future__ import division
+import sys
+import os
+from subprocess import call
+import numpy as np
 
 COLORLIST = [
     "b", "g", "r", "c", "y",
@@ -9,12 +13,6 @@ COLORLIST = [
     "DarkGrey", "DeepPink", "LightPink"]
 
 TESTDIR = "tests/data/"
-
-import sys
-import os
-from subprocess import call
-import numpy as np
-
 
 def run_indir(cmd, directory=None):
     cwd = os.getcwd()
@@ -25,7 +23,6 @@ def run_indir(cmd, directory=None):
     call(cmd, shell=True)
     os.chdir(cwd)
     return()
-
 
 def renyispectrum(x, spectrum):
     '''Given a two-dimensional spectrum spectrum and a one-dimensional
@@ -41,7 +38,6 @@ def renyispectrum(x, spectrum):
         G = np.log10(np.sum(y * np.power(p, l))) / (1 - l)
         R[i] = G
     return R
-
 
 def pad(xvalues, yvalues, fill=True):
     '''Adds missing integer values to x and corresponding zeros to y.'''
@@ -68,7 +64,6 @@ def pad(xvalues, yvalues, fill=True):
                 yout.append(0)
     return(xout, yout)
 
-
 def smoothspectrum(data):
     bins = np.hstack((np.arange(1, 200), np.exp(
         np.arange(0, 4, .01) * np.log(10)) * 200))
@@ -81,13 +76,11 @@ def smoothspectrum(data):
     yo = yo[:-1] / np.diff(bins)
     return xo, yo
 
-
 def getcolor(index, colorlist):
     if colorlist == []:
         colorlist = COLORLIST
     l = index % len(colorlist)
     return colorlist[l]
-
 
 def calcmedian(yd, y, num):
     '''wrapper for np.interp; interpolates to return the value of yd corresponding to num on y
@@ -97,7 +90,6 @@ def calcmedian(yd, y, num):
     y2d = np.hstack(([0], yd[ya]))
     r = np.interp(num, y2, y2d)
     return r
-
 
 def cleanlabel(label):
     '''Sanitizes graph labels of unintersting file extensions'''
@@ -110,7 +102,6 @@ def cleanlabel(label):
     if label[-3:] == ".21":
         label = label[:-3]
     return label
-
 
 def drawboxes(breaks, axis, boxcolor=1):
     '''Draws boxes on the current plot.'''
@@ -138,7 +129,6 @@ def drawboxes(breaks, axis, boxcolor=1):
     p.set_array(np.array([0, 0.2, 0.4, 0.5, 0.7, 0.9, 1]))
     ax.add_collection(p)
 
-
 def getmgrkmerspectrum(accessionnumber, mgrkey=None):
     '''Retrieve kmer spectrum from MG-RAST'''
     import json
@@ -165,7 +155,7 @@ def getmgrkmerspectrum(accessionnumber, mgrkey=None):
                          (e.code, e.reason, e.read()))
         return np.atleast_2d(np.array([1, 0]))
     try:
-        j = json.loads(opener.read().decode("ISO-8859-1"))
+        j = json.loads(opener.read().decode("utf8"))
     except ValueError:
         sys.stderr.write("Error parsing result from %s\n" % some_url)
         j = {}
@@ -184,7 +174,6 @@ def getmgrkmerspectrum(accessionnumber, mgrkey=None):
         except KeyError:
             dataarray = np.atleast_2d(np.array([1, 0]))
     return dataarray
-
 
 def calccumsum(a):
     '''Calcaulates the cumulative-sum vectors from a 2d numpy array
@@ -211,7 +200,6 @@ def calccumsum(a):
     if zo.max() == 0:
         raise ValueError  # There should be data here
     return(cn, c1, yd, yo, zd, zo)
-
 
 def printstats(a, filename, filehandle=None, n=0):
     '''Prints summary statistics to filename'''
@@ -255,13 +243,11 @@ def printstats(a, filename, filehandle=None, n=0):
     if filehandle is None:
         consensusfh.close()
 
-
 def getlength(filename):
     '''parse nonpareil output npo for length parameter'''
     for line in open(filename):
         if line[0:5] == "# @L:":
             return float(line[6:])
-
 
 def loadfile(filename):
     '''Loads file, returns two-column ndarray or None on
@@ -279,11 +265,11 @@ def loadfile(filename):
                 matrix = np.loadtxt(filename, comments="#")
             except ValueError:
                 try:
-                     matrix = np.loadtxt(filename, skiprows=1,
-                                    delimiter=",", usecols=(0, 1))
+                    matrix = np.loadtxt(filename, skiprows=1,
+                                         delimiter=",", usecols=(0, 1))
                 except IndexError:
-                     matrix = np.loadtxt(filename, skiprows=1,
-                                    usecols=(0, 1))
+                    matrix = np.loadtxt(filename, skiprows=1,
+                                         usecols=(0, 1))
         # return None if the file is empty
         matrix[np.isinf(matrix)] = 0
         matrix = np.atleast_2d(matrix)
@@ -295,7 +281,6 @@ def loadfile(filename):
     except IOError:
         sys.stderr.write("ERROR: Can't find file %s\n" % filename)
         return []
-
 
 def printstratify(spectrum, bands=None, flat=False, label=""):
     '''prints table of sizes and data fracitons for separate
@@ -311,7 +296,6 @@ def printstratify(spectrum, bands=None, flat=False, label=""):
         print("#name\t" + "\t".join(map(str, list(bands[:-1] + bands[1:]))))
         print(label + "\t" + "\t".join(map(str, list(size)[:-1] +
                                            list(frac)[1:])))
-
 
 def stratify(spectrum, bands=None, bandtype="depth"):
     '''Breaks spectrum up into defined abundance-buckets,
@@ -333,12 +317,11 @@ def stratify(spectrum, bands=None, bandtype="depth"):
             frac.append(np.sum(cp[cn >= b]) / T)
             size.append(np.sum(c1[cn >= b]))
         return bands, frac, size
-    elif bandtype == "complexity":
+    if bandtype == "complexity":
         for b in bands:
             frac.append(np.sum(cp[yd <= b]) / T)
             size.append(np.sum(c1[yd <= b]))
         return bands, frac, size
-
 
 def makegraphs(*args, **kwargs):
     spectra, filenames = args
@@ -349,7 +332,6 @@ def makegraphs(*args, **kwargs):
             makegraph(spect, filen, n=i, **kwargs)
     else:
         makegraph(*args, **kwargs)
-
 
 def makegraph(spectrum, filename, option=6, label=None, n=0,
               dump=False, opts={}, colorlist=COLORLIST,
@@ -366,7 +348,7 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
         tracelabel = cleanlabel(filename)
     else:
         tracelabel = cleanlabel(label)
-    if option == 0 or option == 1 or option == 19 or option == 20:
+    if option in [0, 1, 19, 20]:
         xclean, yclean = smoothspectrum(spectrum)
         spectrum = np.vstack([xclean, yclean]).T
     if option == 21:
@@ -419,7 +401,7 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
         plt.xlim((1, 10**11))
         plt.ylim(0, 1)
         legendloc = "lower left"
-    elif option == 6 or option == 26:
+    elif option in (6, 26):
         plot1, p, q = (plt.loglog, b_zd, b_cn)
         xlabel, ylabel = ("kmer rank (bp)", "kmer abundance")
         plt.xlim((1, 10**11))
@@ -518,7 +500,7 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
             np.savetxt(fp, c, fmt=[ptype, qtype], delimiter="\t",
                        header=xlabel + "\t" + ylabel)
 
-    if option == -2 or option == 26 or option == 25:
+    if option in (-2, 26, 25):
         if dump:
             printstratify(spectrum)
         else:
@@ -541,8 +523,8 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
         sizeboundaries = size
         drawboxes(fracboundaries, 0)
 
-    if "xlabel" in opts.keys() and opts["xlabel"] is not None: 
-        xlabel = opts["xlabel"] 
+    if "xlabel" in opts.keys() and opts["xlabel"] is not None:
+        xlabel = opts["xlabel"]
     if "ylabel" in opts.keys() and opts["ylabel"] is not None:
         ylabel = opts["ylabel"]
     if "suppress" in opts.keys():
@@ -563,12 +545,11 @@ def makegraph(spectrum, filename, option=6, label=None, n=0,
             plt.title(opts["name"])
         plt.grid(1)
 
-
-def show_pretty_graphs(spectra, filenames, labels=None):
+def show_pretty_graphs(spectra, filenames, labels=None, **kwargs):
     import matplotlib.pyplot as plt
     plt.subplot(131)
-    makegraphs(spectra, filenames, option=6)
+    makegraphs(spectra, filenames, option=6, opts=kwargs)
     plt.subplot(132)
-    makegraphs(spectra, filenames, option=5)
+    makegraphs(spectra, filenames, option=5, opts=kwargs)
     plt.subplot(133)
-    makegraphs(spectra, filenames, option=3)
+    makegraphs(spectra, filenames, option=3, opts=kwargs)

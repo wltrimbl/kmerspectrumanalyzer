@@ -15,3 +15,6 @@ test:
 
 clean:
 	rm tests/data/*.fastq.?
+
+coverage:
+	coverage run -m py.test ; coverage html; coverage report 
