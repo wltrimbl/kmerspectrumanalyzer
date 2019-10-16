@@ -32,7 +32,8 @@ def main(filename, opt=6, label=None, n=0, opts=None, colorlist=[],
     if spectrum.shape[1] > 0:
         spectrum = spectrum[np.lexsort((spectrum[:, 1], spectrum[:, 0]))]
         sys.stderr.write("Making graphs for %s\n" % filename)
-        try:
+        if 1:
+#        try:
             makegraphs(
                 spectrum, filename, option=opt, label=label, n=n,
                 dump=opts["dump"], opts=opts, colorlist=colorlist,
@@ -41,8 +42,9 @@ def main(filename, opt=6, label=None, n=0, opts=None, colorlist=[],
 #                (opts.logfile, n))
             printstats(spectrum, filename, filehandle=logfh, n=n)
             n += 1
-        except ValueError as err:   # This catches no data or defective data
-            sys.stderr.write("Error printing stats for %s\n" % filename)
+#        except ValueError as err:   # This catches no data or defective data
+#            sys.stderr.write("Error printing stats for %s\n" % filename) 
+#            sys.stderr.write(err)
     else:
         sys.stderr.write("Error with dataset %s\n" % filename)
     return n
@@ -108,6 +110,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "-y", "--ylabel", dest="ylabel",
         default=None, help="Y label override")
+    parser.add_argument(
+        "-Z", "--Z", dest="Z",
+        default=1, type=float, help="Overall normalizing constant for graph 43")
 
     ARGS = parser.parse_args()
     graphtype = ARGS.option
@@ -146,7 +151,7 @@ if __name__ == '__main__':
     stylelist = []
     if ARGS.filelist is not None:
         assert os.path.isfile(
-            ARSG.filelist), "File %s does not exist" % ARGS.filelist
+            ARGS.filelist), "File %s does not exist" % ARGS.filelist
         IN_FILE = open(ARGS.filelist, "r")
         for line in IN_FILE:
             if line[0] != "#":

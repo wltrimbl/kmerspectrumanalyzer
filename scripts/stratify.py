@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''Tool to generate bar graphs of data-depth fractions and
 basepair-by-depth distributions from kmer spectra
 '''

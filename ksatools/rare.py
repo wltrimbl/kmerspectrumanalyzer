@@ -2,10 +2,8 @@
 '''Tool to generate computationally-rarefied graphs kmer spectra'''
 
 import sys
-import os
 import scipy.stats
 import numpy as np
-import ksatools
 
 
 def fract(aa, epsilon, threshold):
