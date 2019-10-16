@@ -124,9 +124,9 @@ def windowmask(xxx, yyy, covest, multipleorder):
 
 
 def writefile():
-    outf = open("%s.fit.csv" % os.path.basename(OUTFILE), "w")
+    outf = open("%s.fit.csv" % OUTFILE.name, "w")
     outf.write("file\t%s\ncmd\t%s\ncov\t%.1f\nshape\t%.2f\ngsize\t%.1f\nngthalf\t%d\n" %
-               (INFILE, " ".join(sys.argv[:]), COVERAGE, SHAPE, GENOMESIZE, NUMGTHALF))
+               (INFILE.name, " ".join(sys.argv[:]), COVERAGE, SHAPE, GENOMESIZE, NUMGTHALF))
     for k3 in range(2, len(plsq)):
         outf.write("%d\t%.1f\n" %
                    (fittermsorder[k3 - 2], np.max([plsq[k3], 0])))
@@ -138,7 +138,7 @@ def writedetails():
     OUTPUTMATRIX = np.hstack((dispx.reshape((len(dispx), 1)),
                               dispy.reshape((len(dispy), 1)),
                               model.reshape((len(model), 1))))
-    with open("%s.fit.detail.csv" % OUTFILE, "wb") as f:  # np.savetxt has some issues
+    with open("%s.fit.detail.csv" % OUTFILE.name, "wb") as f:  # np.savetxt has some issues
         np.savetxt(f, OUTPUTMATRIX,
                    fmt=['%d', '%.1f', '%.1f'], delimiter="\t")
     print("sumerr\t%f" % sumscorefn(plsq))
@@ -152,17 +152,17 @@ def plotfit():
     plt.loglog(dispx, dispy, ".b", label="data")
     plt.loglog(dispx, model, '.-g', label="neg binom fit")
     plt.loglog(partialx, partialm, '.r', label='neg binom Fit')
-    BOT = 10 ** int(np.log(min(x)))
-    TOP = 10 ** int(np.log(max(x) + 1))
-    plt.ylim((10, 10**7))
+    BOT = 10 ** int(np.log(np.min(x)))
+    TOP = 10 ** int(np.log(np.max(x) + 1))
+    plt.ylim(top =  np.max([10**7, TOP]))
     plt.legend(loc="lower left")
     plt.xlabel('kmer coverage')
     plt.ylabel('Number of reads ')
-    plt.title('fit to %s' % (INFILE,))
+    plt.title('fit to %s' % (INFILE.name,))
     plt.text(BOT * 10, 1E6, "%s = %.2f Mbases" %
              ("genomesize", GENOMESIZE / 1E6))
     plt.text(BOT * 10, 6E5, "%s = %.1f x" % ("coverage      ", COVERAGE))
-    plt.savefig("%s.fit.png" % os.path.basename(OUTFILE))
+    plt.savefig("%s.fit.png" % os.path.basename(OUTFILE.name))
     if OPTS.interactive:
         plt.show()
 
@@ -200,8 +200,8 @@ if __name__ == '__main__':
         INFILE = OPTS.infile
     except IndexError:
         PARSER.error("Missing table filename input argument \n%s\n" % USAGE)
-    if not (INFILE and os.path.isfile(INFILE)):
-        PARSER.error("Missing input filename\n%s\n" % USAGE)
+#    if not (INFILE and os.path.isfile(INFILE)):
+#        PARSER.error("Missing input filename\n%s\n" % USAGE)
     LOWCUTOFF = int(OPTS.lowcutoff)
     MAXFEV = 2000
     DATA = np.loadtxt(INFILE)  # loaddata
@@ -212,8 +212,8 @@ if __name__ == '__main__':
     OUTFILE = OPTS.outstem
     if OUTFILE is None:
         OUTFILE = INFILE
-    print("INFILE", INFILE)
-    print("OUTFILE", OUTFILE)
+    print("INFILE", INFILE.name)
+    print("OUTFILE", OUTFILE.name)
     MAX_COV, MIN_COV = [int(cov) for cov in OPTS.cutoff.split(",")]
 #  pad data with zeroes representing bins with no counts.
     print("Padding... originally %d, max %d " % (len(ORIGX), max(ORIGX)))
@@ -266,7 +266,7 @@ if __name__ == '__main__':
     plsq = plsq0  # initialize results in case the loop does not run
     parms0 = plsq0
 # Construct list of terms order
-    fittermsorder = range(1, NUMBEROFTERMS + 1)
+    fittermsorder = list(range(1, NUMBEROFTERMS + 1))
     try:
         ind = fittermsorder.index(SECONDPEAK)
         del(fittermsorder[ind])
@@ -317,7 +317,7 @@ if __name__ == '__main__':
     for k in range(2, len(plsq)):
         print("{}\t{:.1f}".format(fittermsorder[k - 2], np.max([plsq[k], 0])))
         GENOMESIZE = GENOMESIZE + fittermsorder[k - 2] * np.max([plsq[k], 0])
-    print("Filename: {:s}".format(INFILE))
+    print("Filename: {:s}".format(INFILE.name))
     print("Genomesize {:.1f} ".format(GENOMESIZE))
     print("coverage   {:.1f} ".format(COVERAGE))
     print("shape      {:.2f} ".format(SHAPE))
