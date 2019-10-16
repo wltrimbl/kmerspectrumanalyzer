@@ -197,10 +197,10 @@ def kmer_count(infile, procs, length, size, count, tmpdir):
     _sout, _serr = run_cmd(jf_cmd)
     parts = glob.glob(jf_base + '*')
     result = merge_hash_set(parts, tmpdir)
-    if result is not None;
+    if result is not None:
         return(result)
     else:
-        sys.stderr.write("Warning, increasing size from {%d} to {%d}\n".format(size, size*2)
+        sys.stderr.write("Warning, increasing size from {%d} to {%d}\n".format(size, size*2))
         return(kmer_count(infile, procs, length, size*2, count, tmpdir))
 
 def main(args):
