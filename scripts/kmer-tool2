@@ -197,11 +197,16 @@ def kmer_count(infile, procs, length, size, count, tmpdir):
     _sout, _serr = run_cmd(jf_cmd)
     parts = glob.glob(jf_base + '*')
     result = merge_hash_set(parts, tmpdir)
-    if result is not None:
-        return(result)
-    else:
-        sys.stderr.write("Warning, increasing size from {%d} to {%d}\n".format(size, size*2))
-        return(kmer_count(infile, procs, length, size*2, count, tmpdir))
+    return(result)
+
+def get_hash_set(input_set, args):
+    hash_set = []
+    for ifile in input_set:
+         if (os.path.getsize(ifile) > 0) and os.path.isfile(ifile):
+                newhash = kmer_count(ifile, args.procs, args.length,
+                                           args.size, args.count, args.tmpdir)
+                hash_set.append(newhash)
+    return(hash_set)
 
 def main(args):
     usage = "usage: kmer-tool [options] -i <input file> -o <output file>"
@@ -275,11 +280,13 @@ def main(args):
                     args.input, max_size, args.type, args.tmpdir)
 
         # get hash set
-        hash_set = []
-        for ifile in input_set:
-            if (os.path.getsize(ifile) > 0) and os.path.isfile(ifile):
-                hash_set.append(kmer_count(ifile, args.procs, args.length,
-                                           args.size, args.count, args.tmpdir))
+        hash_set = get_hash_set(input_set, args)
+        if None in hash_set:
+            sys.stderr("Warning: doubling hash size")
+            args.size = args.size * 2 
+            hash_set = get_hash_set(input_set)
+            if None in hash_set:
+                sys.exit("Cannot count even with *2 hash")
         jf_hash = merge_hash_set(hash_set, args.tmpdir)
         # cleanup
         if len(input_set) > 1:
