@@ -282,12 +282,20 @@ def main(args):
         # get hash set
         hash_set = get_hash_set(input_set, args)
         if None in hash_set:
+                sys.exit("Cannot count even with *2 hash")
+        try:
+            jf_hash = merge_hash_set(hash_set, args.tmpdir) 
+        except IOError:
             sys.stderr("Warning: doubling hash size")
             args.size = args.size * 2 
             hash_set = get_hash_set(input_set)
-            if None in hash_set:
-                sys.exit("Cannot count even with *2 hash")
-        jf_hash = merge_hash_set(hash_set, args.tmpdir)
+            try:
+k               jf_hash = merge_hash_set(hash_set, args.tmpdir)  
+            except IOError:
+                sys.stderr("Warning: doubling hash size")
+                args.size = args.size * 2 
+                hash_set = get_hash_set(input_set)
+          
         # cleanup
         if len(input_set) > 1:
             for f in input_set:
