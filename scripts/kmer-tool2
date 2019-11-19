@@ -8,7 +8,7 @@ Output: kmer information, one of:
   3. dump: profile (kmer seq - count)
   4. histo: histogram (count - abundance)
   5. histo ranked:  columns 1: count 2:abundance 3:count*abundance
-       4: reverse-sum(abundance) 5: reverse-sum(count*abundance) 
+       4: reverse-sum(abundance) 5: reverse-sum(count*abundance)
        6: ratio-to-largest
 """
 
@@ -121,7 +121,7 @@ def split_fastq(in_fh, file_base, max_size):
             except OSError:
                 sys.stderr.write("Error writing split fastq file -- out of space?")
                 for f in fhdl_name:
-                    sys.stderr.write("removing {}".format(f)) 
+                    sys.stderr.write("removing {}".format(f))
                     os.remove(f)
                 sys.exit(1)
             rec_str = ''.join(lines)
@@ -197,11 +197,16 @@ def kmer_count(infile, procs, length, size, count, tmpdir):
     _sout, _serr = run_cmd(jf_cmd)
     parts = glob.glob(jf_base + '*')
     result = merge_hash_set(parts, tmpdir)
-    if result is not None;
-        return(result)
-    else:
-        sys.stderr.write("Warning, increasing size from {%d} to {%d}\n".format(size, size*2)
-        return(kmer_count(infile, procs, length, size*2, count, tmpdir))
+    return(result)
+
+def get_hash_set(input_set, args):
+    hash_set = []
+    for ifile in input_set:
+        if (os.path.getsize(ifile) > 0) and os.path.isfile(ifile):
+            newhash = kmer_count(ifile, args.procs, args.length,
+                                 args.size, args.count, args.tmpdir)
+            hash_set.append(newhash)
+    return(hash_set)
 
 def main(args):
     usage = "usage: kmer-tool [options] -i <input file> -o <output file>"
@@ -236,7 +241,7 @@ def main(args):
     if sys.version_info < (2, 6):
         raise Exception(
             "Python version 2.6 or later is required for kmer-tool2")
-    if args.output == None:
+    if args.output is None:
         parser.error("[error] missing output files")
     if not args.type in TYPES:
         parser.error("[error] missing input type, use one of: %s" %
@@ -275,12 +280,23 @@ def main(args):
                     args.input, max_size, args.type, args.tmpdir)
 
         # get hash set
-        hash_set = []
-        for ifile in input_set:
-            if (os.path.getsize(ifile) > 0) and os.path.isfile(ifile):
-                hash_set.append(kmer_count(ifile, args.procs, args.length,
-                                           args.size, args.count, args.tmpdir))
-        jf_hash = merge_hash_set(hash_set, args.tmpdir)
+        hash_set = get_hash_set(input_set, args)
+        if None in hash_set:
+            sys.exit("Cannot count even with *2 hash")
+        try:
+            jf_hash = merge_hash_set(hash_set, args.tmpdir)
+        except IOError:
+            sys.stderr.write("Warning: doubling hash size")
+            args.size = str(int(args.size) * 2)
+            hash_set = get_hash_set(input_set, args)
+            try:
+                jf_hash = merge_hash_set(hash_set, args.tmpdir)
+            except IOError:
+                sys.stderr.write("Warning: doubling hash size (again)")
+                args.size = str(int(args.size) * 2)
+                hash_set = get_hash_set(input_set, args)
+                jf_hash = merge_hash_set(hash_set, args.tmpdir)
+
         # cleanup
         if len(input_set) > 1:
             for f in input_set:
