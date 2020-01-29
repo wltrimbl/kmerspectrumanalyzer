@@ -30,10 +30,12 @@ GB = 1073741824
 BUFFER = 2 * GB     # 2 Gb seq buffer
 TYPES = ['fasta', 'fastq', 'hash']
 FORMATS = ['hash', 'stats', 'dump', 'histo']
-
+DEBUG = 0
 
 def run_cmd(cmd):
     '''Wrapper for Popen, returns stdout, stderr'''
+    if DEBUG:
+        print(cmd)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
@@ -160,7 +162,7 @@ def merge_hash_set(hash_set, tmpdir):
     except OSError:
         for h in hash_set:
             os.remove(h)
-        return(None)
+        raise IOError  # Retry
     for h in hash_set:
         os.remove(h)
     if not os.path.isfile(merge_file):
@@ -286,13 +288,13 @@ def main(args):
         try:
             jf_hash = merge_hash_set(hash_set, args.tmpdir)
         except IOError:
-            sys.stderr.write("Warning: doubling hash size")
+            sys.stderr.write("Warning: doubling hash size\n")
             args.size = str(int(args.size) * 2)
             hash_set = get_hash_set(input_set, args)
             try:
                 jf_hash = merge_hash_set(hash_set, args.tmpdir)
             except IOError:
-                sys.stderr.write("Warning: doubling hash size (again)")
+                sys.stderr.write("Warning: doubling hash size (again)\n")
                 args.size = str(int(args.size) * 2)
                 hash_set = get_hash_set(input_set, args)
                 jf_hash = merge_hash_set(hash_set, args.tmpdir)
